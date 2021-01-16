@@ -28,9 +28,7 @@ class SetBet(gamestate.GameState):
 
     @staticmethod
     def exit(game):
-        game.player.balance -= game.player_hands[0].bet
-        game.player.save()
-        print(repr(user.User.objects.get({"_id":game.player.username})))
+        pass
 
     @staticmethod
     def get_possible_moves(game):

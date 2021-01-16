@@ -16,6 +16,9 @@ class InitialMove(player_move.PlayerMove):
     @staticmethod
     def enter(game: "db.game.Game") -> "db.game.Game":
 
+        game.player.balance -= game.player_hands[0].bet
+        game.player.save()
+
         game.setup_new_round()
 
         # draw 2 cards for each player, alternating between player and dealer
@@ -51,6 +54,8 @@ class InitialMove(player_move.PlayerMove):
             game.player_hands[action_pair.hand].hand_state |= hand_state.HandState.DOUBLING
             game.player_hands[action_pair.hand].hand_state |= hand_state.HandState.STANDING
             game.player_hands[action_pair.hand].cards.append(drawn_card)
+            game.player.balance -= game.player_hands[action_pair.hand].bet # deduct bet amount again for doubled bet
+            game.player.save()
 
             if len(InitialMove.get_possible_moves(game)) == 0:
                 game.change_state(state.State.DEALER_MOVE)
