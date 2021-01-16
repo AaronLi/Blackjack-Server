@@ -1,9 +1,11 @@
 import collections
 import enum
 import typing
+import db.game
 
-from blackjackgamestate import gamestate, state, dispatcher
-import hand_state
+from blackjack.blackjackgamestate import dispatcher
+from blackjack.blackjackgamestate import gamestate, state
+from blackjack import hand_state
 
 
 class PlayerMove(gamestate.GameState):
@@ -14,12 +16,11 @@ class PlayerMove(gamestate.GameState):
     ActionPair = collections.namedtuple("ActionPair", ("action_code", "hand"))
 
     @staticmethod
-    def enter(game: "BlackJackGame") -> "BlackJackGame":
-        # 
+    def enter(game: "db.game.Game") -> "db.game.Game":
         return super(PlayerMove, PlayerMove).enter(game)
 
     @staticmethod
-    def poll(game: "BlackJackGame") -> str:
+    def poll(game: "db.game.Game") -> str:
 
         valid_moves = PlayerMove.get_possible_moves(game).keys()
         # string for section, number of codes, list of codes
@@ -28,7 +29,7 @@ class PlayerMove(gamestate.GameState):
 
 
     @staticmethod
-    def input(game: "BlackJackGame", action_code: str) -> typing.Tuple["BlackJackGame", str]:
+    def input(game: "db.game.Game", action_code: str) -> typing.Tuple["db.game.Game", str]:
         """
         Handle Player Input
         :param game: The current game state
@@ -44,6 +45,10 @@ class PlayerMove(gamestate.GameState):
             drawn_card = game.deck.draw_card()
             game.player_hands[action.hand].cards.append(drawn_card)
 
+            hand_bust = all(all(score > 21 for score in game.get_hand_scores(i)) for i in range(len(game.player_hands)))
+            if hand_bust:
+                print("hand busted")
+                game.change_state(state.State.PAYOUT)
             if len(PlayerMove.get_possible_moves(game)) == 0:
                 # no possible moves remain
                 game.change_state(state.State.DEALER_MOVE)
@@ -58,11 +63,11 @@ class PlayerMove(gamestate.GameState):
         return game, dispatcher.Dispatcher.poll(game)
 
     @staticmethod
-    def exit(game: "BlackJackGame") -> "BlackJackGame":
+    def exit(game: "db.game.Game") -> "db.game.Game":
         return super(PlayerMove, PlayerMove).exit(game)
 
     @staticmethod
-    def get_possible_moves(game: "BlackJackGame") -> typing.MutableMapping[str, ActionPair]:
+    def get_possible_moves(game: "db.game.Game") -> typing.MutableMapping[str, ActionPair]:
         """
         Get the possible actions a player can make
         :param game: The current state of the game
@@ -73,21 +78,17 @@ class PlayerMove(gamestate.GameState):
         for i, player_hand in enumerate(game.player_hands):
             if player_hand.hand_state == hand_state.HandState.INACTIVE:
                 # inactive
-                print(f"hand {i} inactive")
                 continue
 
             if player_hand.hand_state & hand_state.HandState.STANDING:
                 # hand is standing
-                print(f"hand {i} standing")
                 continue
 
             is_busted = all(score > 21 for score in game.get_hand_scores(i))
             if is_busted:
                 # hand is busted
-                print(f"hand {i} busted")
                 continue
 
-            print(f"hand {i} able")
             options.update({
                 f"hit_{i}": PlayerMove.ActionPair(PlayerMove.PlayerAction.HIT, i),
                 f"stand_{i}": PlayerMove.ActionPair(PlayerMove.PlayerAction.STAND, i)

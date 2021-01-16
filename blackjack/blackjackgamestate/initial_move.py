@@ -1,9 +1,9 @@
 import enum
 import typing
-
-import hand_state
-from blackjackgamestate import player_move, state, dispatcher
-from blackjackgamestate.player_move import PlayerMove
+import db.game
+from blackjack import hand_state, blackjackcard
+from blackjack.blackjackgamestate import player_move, dispatcher
+from blackjack.blackjackgamestate import state
 
 
 class InitialMove(player_move.PlayerMove):
@@ -14,7 +14,7 @@ class InitialMove(player_move.PlayerMove):
         DOUBLE = 3
 
     @staticmethod
-    def enter(game: "BlackJackGame") -> "BlackJackGame":
+    def enter(game: "db.game.Game") -> "db.game.Game":
 
         game.setup_new_round()
 
@@ -27,18 +27,18 @@ class InitialMove(player_move.PlayerMove):
         game.player_natural = 21 in game.get_hand_scores(0)
         game.dealer_natural = 21 in game.get_hand_scores(-1)
         if game.player_natural or game.dealer_natural:
-            game.change_state(state.State.PAYOUT) # TODO: change to payout
+            game.change_state(state.State.PAYOUT)
 
         return super(InitialMove, InitialMove).enter(game)
 
     @staticmethod
-    def poll(game: "BlackJackGame") -> str:
+    def poll(game: "db.game.Game") -> str:
         valid_moves = InitialMove.get_possible_moves(game).keys()
         valid_moves_string = f"moves {len(valid_moves)} {' '.join(valid_moves)}"
         return '\n'.join(('playermove', str(game), valid_moves_string))
 
     @staticmethod
-    def input(game: "BlackJackGame", action_code: str) -> typing.Tuple["BlackJackGame", str]:
+    def input(game: "db.game.Game", action_code: str) -> typing.Tuple["db.game.Game", str]:
         valid_moves = InitialMove.get_possible_moves(game)
         action_pair = valid_moves.get(action_code)
 
@@ -67,11 +67,11 @@ class InitialMove(player_move.PlayerMove):
         return game, dispatcher.Dispatcher.poll(game)
 
     @staticmethod
-    def exit(game: "BlackJackGame") -> "BlackJackGame":
+    def exit(game: "db.game.Game") -> "db.game.Game":
         return super(InitialMove, InitialMove).exit(game)
 
     @staticmethod
-    def get_possible_moves(game: "BlackJackGame") -> typing.MutableMapping[str, PlayerMove.ActionPair]:
+    def get_possible_moves(game: "db.game.Game") -> typing.MutableMapping[str, player_move.PlayerMove.ActionPair]:
         """
         Gets the possible moves for an initial move,
         these are identical to a normal move except you can split your hand or double your bet
@@ -84,14 +84,14 @@ class InitialMove(player_move.PlayerMove):
 
         possible_moves = {}
 
-        num_active_hands = len(tuple(hand for hand in game.player_hands if hand.hand_state.ACTIVE))
+        num_active_hands = len(tuple(hand for hand in game.player_hands if hand.hand_state & hand_state.HandState.ACTIVE))
         for i, hand in enumerate(game.player_hands):
             if num_active_hands == 1: # only allow splitting once
-                card_1_scores = game.player_hands[0].cards[0].get_power().get_score()
-                card_2_scores = game.player_hands[0].cards[1].get_power().get_score()
+                card_1_scores = blackjackcard.Power.from_card(game.player_hands[0].cards[0]).get_score()
+                card_2_scores = blackjackcard.Power.from_card(game.player_hands[0].cards[1]).get_score()
 
                 if card_1_scores == card_2_scores:
-                    possible_moves["split"] = PlayerMove.ActionPair(InitialMove.PlayerActionInitial.SPLIT, 0)
+                    possible_moves["split"] = player_move.PlayerMove.ActionPair(InitialMove.PlayerActionInitial.SPLIT, 0)
 
             if hand.hand_state & hand_state.HandState.STANDING:
                 continue
@@ -101,10 +101,9 @@ class InitialMove(player_move.PlayerMove):
 
             # hit and stand cases are dealt with by PlayerMove
             if not (hand.hand_state & hand_state.HandState.DOUBLING):
-                possible_moves[f"double_{i}"] = PlayerMove.ActionPair(InitialMove.PlayerActionInitial.DOUBLE, i)
+                possible_moves[f"double_{i}"] = player_move.PlayerMove.ActionPair(InitialMove.PlayerActionInitial.DOUBLE, i)
             # only one hand can be interacted with at a time
             break
 
-        print(f"super added {super(InitialMove, InitialMove).get_possible_moves(game)}")
         possible_moves.update(super(InitialMove, InitialMove).get_possible_moves(game))
         return possible_moves

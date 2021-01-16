@@ -1,3 +1,4 @@
+import math
 from dataclasses import dataclass
 
 @dataclass
@@ -6,7 +7,7 @@ class PayoutFactor:
     return_bet: bool
 
     def get_payout(self, bet):
-        total = self.bet_return_factor * bet
+        total = math.floor(self.bet_return_factor * bet)
         if self.return_bet:
             total += bet
 

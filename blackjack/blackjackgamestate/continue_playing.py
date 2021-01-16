@@ -1,19 +1,19 @@
 import typing
-
-from blackjackgamestate import gamestate, state
+import db.game
+from blackjack.blackjackgamestate import gamestate, state
 
 
 class ContinuePlaying(gamestate.GameState):
     @staticmethod
-    def enter(game: "BlackJackGame") -> "BlackJackGame":
+    def enter(game: "db.game.Game") -> "db.game.Game":
         return super(ContinuePlaying, ContinuePlaying).enter(game)
 
     @staticmethod
-    def poll(game: "BlackJackGame") -> str:
-        return "\n".join(("continueplaying", str(game), " ".join(ContinuePlaying.get_valid_moves(game))))
+    def poll(game: "db.game.Game") -> str:
+        return "\n".join(("continueplaying", str(game), "moves 2 "+ " ".join(ContinuePlaying.get_valid_moves(game))))
 
     @staticmethod
-    def input(game: "BlackJackGame", action_code: str) -> typing.Tuple["BlackJackGame", str]:
+    def input(game: "db.game.Game", action_code: str) -> typing.Tuple["db.game.Game", str]:
         if action_code in ContinuePlaying.get_valid_moves(game):
             if action_code == "yes":
                 if len(game.deck) < game.deck.shuffle_point:
@@ -25,9 +25,9 @@ class ContinuePlaying(gamestate.GameState):
         return super(ContinuePlaying, ContinuePlaying).input(game, action_code)
 
     @staticmethod
-    def exit(game: "BlackJackGame") -> "BlackJackGame":
+    def exit(game: "db.game.Game") -> "db.game.Game":
         return super(ContinuePlaying, ContinuePlaying).exit(game)
 
     @staticmethod
-    def get_valid_moves(game: "BlackJackGame") -> typing.Sequence[str]:
+    def get_valid_moves(game: "db.game.Game") -> typing.Sequence[str]:
         return "yes", "no"

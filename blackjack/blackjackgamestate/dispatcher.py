@@ -1,12 +1,16 @@
-from typing import Sequence, Tuple
-
-from blackjackgamestate import gamestate, dealer_move, payout, continue_playing, exit_game, state, setting_bet, \
+import logging
+from datetime import datetime
+from typing import Tuple
+import db.game
+from blackjack.blackjackgamestate import payout, continue_playing, exit_game, setting_bet, \
     shuffling_deck, initial_move, player_move
+from blackjack.blackjackgamestate import gamestate, state, dealer_move
 
 
 class Dispatcher(gamestate.GameState):
     @staticmethod
-    def dispatch(game_state: state.State):
+    def dispatch(game_state: int):
+        logging.debug(f"Current state {state.State(game_state).name}")
         if game_state == state.State.SETTING_BET:
             return setting_bet.SetBet
         elif game_state == state.State.SHUFFLING_DECK:
@@ -25,18 +29,19 @@ class Dispatcher(gamestate.GameState):
             return exit_game.ExitGame
 
     @staticmethod
-    def enter(game: "BlackJackGame") -> "BlackJackGame":
+    def enter(game: "db.game.Game") -> "db.game.Game":
         return Dispatcher.dispatch(game.state).enter(game)
 
     @staticmethod
-    def poll(game: "BlackJackGame") -> str:
+    def poll(game: "db.game.Game") -> str:
         return Dispatcher.dispatch(game.state).poll(game)
 
     @staticmethod
-    def input(game: "BlackJackGame", action_code: str) -> Tuple["BlackJackGame", str]:
+    def input(game: "db.game.Game", action_code: str) -> Tuple["db.game.Game", str]:
+        game.last_move_time = datetime.now()
         return Dispatcher.dispatch(game.state).input(game, action_code)
 
     @staticmethod
-    def exit(game: "BlackJackGame") -> "BlackJackGame":
+    def exit(game: "db.game.Game") -> "db.game.Game":
         return Dispatcher.dispatch(game.state).exit(game)
 

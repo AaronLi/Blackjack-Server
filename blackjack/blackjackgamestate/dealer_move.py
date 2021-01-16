@@ -1,8 +1,7 @@
-from typing import Sequence
-
 import typing
-
-from blackjackgamestate import gamestate, dispatcher, state
+import db.game
+from blackjack.blackjackgamestate import dispatcher
+from blackjack.blackjackgamestate import gamestate, state
 
 
 class DealerMove(gamestate.GameState):
@@ -14,11 +13,11 @@ class DealerMove(gamestate.GameState):
     """
 
     @staticmethod
-    def enter(game: "BlackJackGame") -> "BlackJackGame":
+    def enter(game: "db.game.Game") -> "db.game.Game":
         return super(DealerMove, DealerMove).enter(game)
 
     @staticmethod
-    def poll(game: "BlackJackGame") -> str:
+    def poll(game: "db.game.Game") -> str:
         valid_moves = DealerMove.get_valid_moves(game)
 
         valid_moves_string = f"moves {len(valid_moves)} {' '.join(valid_moves)}"
@@ -26,7 +25,7 @@ class DealerMove(gamestate.GameState):
         return '\n'.join(("dealermove", str(game), valid_moves_string))
 
     @staticmethod
-    def input(game: "BlackJackGame", action_code: str) -> typing.Tuple["BlackJackGame", str]:
+    def input(game: "db.game.Game", action_code: str) -> typing.Tuple["db.game.Game", str]:
         if action_code in DealerMove.get_valid_moves(game):
             if action_code == "ack":
                 # maybe only do this when receiving ack?
@@ -42,9 +41,9 @@ class DealerMove(gamestate.GameState):
         return game, dispatcher.Dispatcher.poll(game)
 
     @staticmethod
-    def exit(game: "BlackJackGame") -> "BlackJackGame":
+    def exit(game: "db.game.Game") -> "db.game.Game":
         return super(DealerMove, DealerMove).exit(game)
 
     @staticmethod
-    def get_valid_moves(game: "BlackJackGame") -> typing.Sequence[str]:
+    def get_valid_moves(game: "db.game.Game") -> typing.Sequence[str]:
         return 'ack',

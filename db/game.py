@@ -1,39 +1,39 @@
+import logging
 from typing import List
 
-from dataclasses import dataclass
-import blackjackcard
-import blackjackdeck
-import hand_state
-from blackjackgamestate import state, dispatcher
+from pymodm import MongoModel, fields
+
+import blackjack
+from blackjack import hand_state, blackjackcard
+from blackjack.blackjackgamestate import dispatcher, state as game_state
+from db.deck import Deck
+from db.hand import Hand
 
 
-@dataclass
-class BlackJackHand:
-    cards: list
-    hand_state: hand_state.HandState
-    bet: int
+class Game(MongoModel):
+    player_hands = fields.EmbeddedDocumentListField(Hand, verbose_name="Player Hands",
+                                                    default=[Hand(hand_state=hand_state.HandState.ACTIVE),
+                                                             Hand()])
 
+    player_natural = fields.BooleanField(default=False)
+    dealer_natural = fields.BooleanField(default=False)
 
-class BlackJackGame:
-    MAX_BET = 500
-    BET_SIZES = [5, 10, 25, 50, 100]
+    dealer_hand = fields.EmbeddedDocumentField(Hand, verbose_name="Dealer Hand",
+                                               default=Hand(hand_state=hand_state.HandState.ACTIVE))
 
-    def __init__(self) -> None:
-        super().__init__()
-        self.player_hands = [BlackJackHand([], hand_state.HandState.ACTIVE, 0),
-                             BlackJackHand([], hand_state.HandState.INACTIVE, 0)]
-        self.player_natural = False
-        self.dealer_natural = False
-        self.dealer_hand = BlackJackHand([], hand_state.HandState.ACTIVE, 0)
-        self.deck = blackjackdeck.BlackJackDeck(6)
-        self.state = state.State.SETTING_BET
+    deck = fields.EmbeddedDocumentField(Deck, "deck", default=Deck(num_decks=blackjack.NUM_DECKS))
+
+    state = fields.IntegerField(default=game_state.State.SETTING_BET)
+
+    player = fields.ReferenceField("User", verbose_name="Player")
+    last_move_time = fields.DateTimeField("Last Move")
 
     def setup_new_round(self):
-        self.player_hands = [BlackJackHand([], hand_state.HandState.ACTIVE, self.player_hands[0].bet),
-                             BlackJackHand([], hand_state.HandState.INACTIVE, 0)]
+        self.player_hands = [Hand([], hand_state.HandState.ACTIVE, self.player_hands[0].bet),
+                             Hand([], hand_state.HandState.INACTIVE, 0)]
         self.player_natural = False
         self.dealer_natural = False
-        self.dealer_hand = BlackJackHand([], hand_state.HandState.ACTIVE, 0)
+        self.dealer_hand = Hand([], hand_state.HandState.ACTIVE, 0)
 
     def get_hand_scores(self, hand_number) -> List[int]:
         """
@@ -51,8 +51,8 @@ class BlackJackGame:
             cards_to_score = self.dealer_hand.cards
 
         for card in cards_to_score:
-            card_scores = card.get_power().get_score()
-            if card.get_power() == blackjackcard.Power.ACE:
+            card_scores = blackjackcard.Power.from_card(card).get_score()
+            if blackjackcard.Power.from_card(card) == blackjackcard.Power.ACE:
                 if len(scores) == 1:
                     scores = [scores[0] + card_scores[0], scores[0] + card_scores[1]]
                 elif len(scores) == 2:
@@ -66,7 +66,8 @@ class BlackJackGame:
                     scores[1] += card_scores[0]
         return scores
 
-    def change_state(self, new_state: state.State):
+    def change_state(self, new_state: int):
+        logging.debug(f"change from {game_state.State(self.state).name} to {game_state.State(new_state).name}")
         dispatcher.Dispatcher.exit(self)
         self.state = new_state
         dispatcher.Dispatcher.enter(self)
@@ -86,6 +87,8 @@ class BlackJackGame:
 
         # only show the first card of the dealer
         # number of cards the dealer has, first card
-        response.append(f"dealer {len(self.dealer_hand.cards)} {self.dealer_hand.cards[0]}")
+        # TODO: replace str(str(card)) with str(int(card))
+        response.append(
+            f"dealer {len(self.dealer_hand.cards)} {' '.join(str(str(card)) if ((self.state >= game_state.State.DEALER_MOVE) or (i == 0)) else '-1' for i, card in enumerate(self.dealer_hand.cards))}")
 
         return '\n'.join(response)

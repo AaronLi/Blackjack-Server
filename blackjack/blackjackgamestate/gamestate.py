@@ -1,27 +1,28 @@
-import enum
 from abc import ABC
-from typing import Sequence, Tuple
+from typing import Tuple
+
+import db.game
 
 
 class GameState(ABC):
 
     @staticmethod
-    def enter(game: "BlackJackGame") -> "BlackJackGame":
+    def enter(game: "db.game.Game") -> "db.game.Game":
         """
         Called when you enter the state
-        :type game: blackjack.BlackJackGame
+        :type game: blackjack.db.game.Game
         """
         return game
 
     @staticmethod
-    def poll(game: "BlackJackGame") -> str:
+    def poll(game: "db.game.Game") -> str:
         """
         Called when a client wants to know what the state of the game is and what their actions are
         """
         return ""
 
     @staticmethod
-    def input(game: "BlackJackGame", action_code: str) -> Tuple["BlackJackGame", str]:
+    def input(game: "db.game.Game", action_code: str) -> Tuple["db.game.Game", str]:
         """
         Called when a client is interacting with the game,
         :param game the current game state
@@ -31,7 +32,7 @@ class GameState(ABC):
         return game, ""
 
     @staticmethod
-    def exit(game: "BlackJackGame") -> "BlackJackGame":
+    def exit(game: "db.game.Game") -> "db.game.Game":
         """
         Called when a state is being transitioned out of
         """

@@ -1,5 +1,4 @@
-import blackjackdeck
-import blackjackcard
+from blackjack import blackjackdeck
 import collections
 
 def test_create_deck():

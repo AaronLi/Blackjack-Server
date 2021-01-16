@@ -1,4 +1,5 @@
 import enum
+from pymodm import fields
 
 class Suit(enum.IntEnum):
     HEARTS = 0
@@ -36,12 +37,3 @@ class Power(enum.IntEnum):
             return [self+1]
         elif self >= Power.TEN:
             return [10]
-class Card(int):
-    def get_suit(self) -> Suit:
-        return Suit.from_card(self)
-    
-    def get_power(self) -> Power:
-        return Power.from_card(self)
-    
-    def __str__(self):
-        return f"{self.get_power().name} of {self.get_suit().name}"

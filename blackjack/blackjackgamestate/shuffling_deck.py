@@ -1,25 +1,25 @@
-from blackjackgamestate import gamestate, state
-
+from blackjack.blackjackgamestate import gamestate, state
+import db.game
 
 class ShufflingDeck(gamestate.GameState):
     @staticmethod
-    def enter(game: "BlackJackGame") -> "BlackJackGame":
+    def enter(game: "db.game.Game") -> "db.game.Game":
         game.deck.shuffle_deck()
         game.change_state(state.State.INITIAL_MOVE)
         return game
 
 
     @staticmethod
-    def poll(game: "BlackJackGame") -> str:
+    def poll(game: "db.game.Game") -> str:
         # shouldn't be called, shuffling should go straight to another state
         raise Exception("Illegal access")
         return game
 
     @staticmethod
-    def input(game: "BlackJackGame", action_code: str) -> "BlackJackGame":
+    def input(game: "db.game.Game", action_code: str) -> "db.game.Game":
         raise Exception("Illegal access")
         return game
 
     @staticmethod
-    def exit(game: "BlackJackGame") -> "BlackJackGame":
+    def exit(game: "db.game.Game") -> "db.game.Game":
         return game
