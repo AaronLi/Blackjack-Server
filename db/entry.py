@@ -12,10 +12,11 @@ from db import user, game
 
 def connect():
     connection_address = os.getenv("MONGO_CONNECTION")
-    pymodm.connect(connection_address)
+    pymodm.connect(connection_address.strip('"'))
 
 
 if __name__ == '__main__':
+    connect()
     username = input("Log in as?\n>>> ")
     try:
         active_user = user.User.get_user_by_username(username)

@@ -1,6 +1,6 @@
 import typing
 import db.game
-from blackjack.blackjackgamestate import gamestate, state
+from blackjack.blackjackgamestate import gamestate, state, dispatcher
 
 
 class ContinuePlaying(gamestate.GameState):
@@ -16,13 +16,13 @@ class ContinuePlaying(gamestate.GameState):
     def input(game: "db.game.Game", action_code: str) -> typing.Tuple["db.game.Game", str]:
         if action_code in ContinuePlaying.get_valid_moves(game):
             if action_code == "yes":
-                if len(game.deck) < game.deck.shuffle_point:
+                if len(game.deck.cards) < game.deck.shuffle_point:
                     game.change_state(state.State.SHUFFLING_DECK)
                 else:
                     game.change_state(state.State.INITIAL_MOVE)
             elif action_code == "no":
                 game.change_state(state.State.END)
-        return super(ContinuePlaying, ContinuePlaying).input(game, action_code)
+        return game, dispatcher.Dispatcher.poll(game)
 
     @staticmethod
     def exit(game: "db.game.Game") -> "db.game.Game":

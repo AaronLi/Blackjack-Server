@@ -2,12 +2,14 @@ import enum
 import typing, logging
 import db.game
 from blackjack import hand_state, payoutfactor
-from blackjack.blackjackgamestate import gamestate, state
+from blackjack.blackjackgamestate import gamestate, state, dispatcher
+
 
 class GameResult(enum.Enum):
-    WON=enum.auto()
-    TIE=enum.auto()
-    LOSS=enum.auto()
+    WON = enum.auto()
+    TIE = enum.auto()
+    LOSS = enum.auto()
+
 
 class Payout(gamestate.GameState):
     @staticmethod
@@ -21,13 +23,13 @@ class Payout(gamestate.GameState):
     @staticmethod
     def poll(game: "db.game.Game") -> str:
         result, winning = Payout.get_player_payout(game)
-        return f"payout\n{result.name.lower()} {winning}"
+        return f"payout\n{result.name.lower()} {winning}\nmoves 1 {' '.join(Payout.get_valid_moves(game))}"
 
     @staticmethod
     def input(game: "db.game.Game", action_code: str) -> typing.Tuple["db.game.Game", str]:
         if action_code in Payout.get_valid_moves(game):
             game.change_state(state.State.CONTINUE_PLAYING)
-        return super(Payout, Payout).input(game, action_code)
+        return game, dispatcher.Dispatcher.poll(game)
 
     @staticmethod
     def exit(game: "db.game.Game") -> "db.game.Game":
