@@ -4,4 +4,5 @@ dnspython >= 2.1.0
 pyotp~=2.4.1
 qrcode~=6.1
 Pillow>=8.0.0
-flask
+flask~=1.1.2
+requests

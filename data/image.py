@@ -3,7 +3,8 @@ from PIL import Image
 
 class OCSimpleImage:
     def __init__(self, image=None):
-        self.image = image.convert(mode="RGBA")
+
+        self.image = image.convert(mode="RGBA") if image else None
 
     @staticmethod
     def _byte_encode(byte):
@@ -20,7 +21,7 @@ class OCSimpleImage:
         data_blob = ''.join(f"{OCSimpleImage._byte_encode(r)}{OCSimpleImage._byte_encode(g)}{OCSimpleImage._byte_encode(b)}" for r,g,b,a in self.image.getdata())
         return f"{self.image.width} {data_blob}"
 
-    def deserialize(self, str):
+    def deserialize(self, str, scale=1):
         image_width_s, data_blob = str.split()
         image_width = int(image_width_s)
         image_height = (len(data_blob)//6)//image_width
@@ -34,7 +35,7 @@ class OCSimpleImage:
             b = OCSimpleImage._byte_decode(pixel_data[4:6])
             pixel_pos = ((pixel_index//6) % image_width, pixel_index//6//image_width)
             out_image.putpixel(pixel_pos, (r,g,b))
-        self.image = out_image
+        self.image = out_image.resize((out_image.width * scale, out_image.height * scale), resample=Image.NEAREST)
         return self
     def show(self):
         self.image.show()

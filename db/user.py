@@ -40,12 +40,16 @@ class User(MongoModel):
         if otp_obj.verify(totp):
             self.auth_token = hex(random.getrandbits(128))[2:]
             self.auth_token_expiry = datetime.now() + TOKEN_LIFETIME
+            self.last_logon = datetime.now()
+            self.save()
             return True, self.auth_token
         return False, None
 
     def check_token(self, token):
         if self.auth_token == token:
             if datetime.now() < self.auth_token_expiry:
+                self.last_logon = datetime.now()
+                self.save()
                 return True
         return False
 

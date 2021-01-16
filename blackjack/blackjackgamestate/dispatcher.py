@@ -39,7 +39,9 @@ class Dispatcher(gamestate.GameState):
     @staticmethod
     def input(game: "db.game.Game", action_code: str) -> Tuple["db.game.Game", str]:
         game.last_move_time = datetime.now()
-        return Dispatcher.dispatch(game.state).input(game, action_code)
+        move_result = Dispatcher.dispatch(game.state).input(game, action_code)
+        game.save()
+        return move_result
 
     @staticmethod
     def exit(game: "db.game.Game") -> "db.game.Game":

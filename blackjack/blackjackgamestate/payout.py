@@ -18,6 +18,7 @@ class Payout(gamestate.GameState):
         payout = Payout.get_player_payout(game)[1]
         logging.info(f"Player {'x'} won {payout}₪")
         game.player.balance += payout
+        game.player.save()
         return super(Payout, Payout).enter(game)
 
     @staticmethod

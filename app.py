@@ -75,6 +75,7 @@ def blackjack_game():
                 new_game = game.Game(player=user_obj.username)
                 new_game.save()
                 user_obj.current_game = new_game
+                user_obj.save()
             action = request.form.get("action")
             response_string = None
             if action == "poll":
@@ -84,13 +85,6 @@ def blackjack_game():
                 if player_move:
                     new_game_state, response_string = dispatcher.Dispatcher.input(user_obj.current_game, player_move)
             if response_string:
-                if response_string == "GAME OVER":
-                    # game ended, delete game instance
-                    user_obj.current_game.delete()
-                    print('beep')
-                else:
-                    user_obj.current_game.save()
-                user_obj.save()
                 return f"success\n{response_string}"
             return f"failed\ninvalid action {action} try (poll, input)"
         else:
