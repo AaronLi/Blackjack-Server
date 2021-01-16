@@ -36,10 +36,9 @@ class User(MongoModel):
         return User.objects.get({"_id":username})
 
     def try_login(self, totp):
-        otp_obj = pyotp.TOTP(totp)
-
+        otp_obj = pyotp.TOTP(self.totp_base)
         if otp_obj.verify(totp):
-            self.auth_token = hex(random.getrandbits(128)[2:])
+            self.auth_token = hex(random.getrandbits(128))[2:]
             self.auth_token_expiry = datetime.now() + TOKEN_LIFETIME
             return True, self.auth_token
         return False, None
