@@ -30,7 +30,7 @@ class InitialMove(player_move.PlayerMove):
         game.player_natural = 21 in game.get_hand_scores(0)
         game.dealer_natural = 21 in game.get_hand_scores(-1)
         if game.player_natural or game.dealer_natural:
-            game.change_state(state.State.PAYOUT)
+            game.change_state(state.State.DEALER_MOVE)
 
         return super(InitialMove, InitialMove).enter(game)
 
@@ -91,20 +91,23 @@ class InitialMove(player_move.PlayerMove):
 
         num_active_hands = len(tuple(hand for hand in game.player_hands if hand.hand_state & hand_state.HandState.ACTIVE))
         for i, hand in enumerate(game.player_hands):
-            if num_active_hands == 1: # only allow splitting once
-                card_1_scores = blackjackcard.Power.from_card(game.player_hands[0].cards[0]).get_score()
-                card_2_scores = blackjackcard.Power.from_card(game.player_hands[0].cards[1]).get_score()
-
-                if card_1_scores == card_2_scores:
-                    possible_moves["split"] = player_move.PlayerMove.ActionPair(InitialMove.PlayerActionInitial.SPLIT, 0)
-
             if hand.hand_state & hand_state.HandState.STANDING:
                 continue
 
             if not (hand.hand_state & hand_state.HandState.ACTIVE):
                 continue
 
-            # hit and stand cases are dealt with by PlayerMove
+            if all(score > 21 for score in game.get_hand_scores(i)):
+               continue
+
+            if num_active_hands == 1: # only allow splitting once
+                card_1_scores = blackjackcard.Power.from_card(game.player_hands[0].cards[0]).get_score()
+                card_2_scores = blackjackcard.Power.from_card(game.player_hands[0].cards[1]).get_score()
+
+                if card_1_scores == card_2_scores:
+                    possible_moves[f"split_{i}"] = player_move.PlayerMove.ActionPair(InitialMove.PlayerActionInitial.SPLIT, 0)
+
+        # hit and stand cases are dealt with by PlayerMove
             if not (hand.hand_state & hand_state.HandState.DOUBLING):
                 possible_moves[f"double_{i}"] = player_move.PlayerMove.ActionPair(InitialMove.PlayerActionInitial.DOUBLE, i)
             # only one hand can be interacted with at a time

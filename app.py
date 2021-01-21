@@ -1,9 +1,12 @@
 import pyotp
 from flask import Flask
 from flask import request
+
+from blackjack import blackjackgamestate
+from blackjack.blackjackgamestate.state import State
 from db.user import User, UserExistsException
 from db import entry, game
-from data.image import OCSimpleImage
+from data.image_half_colour import OCSimpleImage
 from blackjack.blackjackgamestate import dispatcher
 import qrcode, logging, datetime
 
@@ -11,6 +14,8 @@ entry.connect()
 
 app = Flask(__name__)
 
+from logging import Logger
+logging.getLogger().setLevel(logging.INFO)
 
 @app.route("/auth/register", methods=["POST"])
 def auth():
@@ -58,7 +63,7 @@ def login():
                 return f"success\n{auth_key}"
 
         logging.info(f"{login_username} failed to log in")
-        return f"failed"
+        return f"failed\ninvalid login"
     except User.DoesNotExist:
         logging.info(f"Unknown user login by name of {login_username} from IP {request.environ['REMOTE_ADDR']}")
         return "failed\nuser does not exist"
@@ -84,6 +89,8 @@ def blackjack_game():
                 player_move = request.form.get("move")
                 if player_move:
                     new_game_state, response_string = dispatcher.Dispatcher.input(user_obj.current_game, player_move)
+                    if new_game_state.state == State.END:
+                        user_obj.current_game.delete()
             if response_string:
                 return f"success\n{response_string}"
             return f"failed\ninvalid action {action} try (poll, input)"
@@ -97,4 +104,4 @@ def blackjack_game():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(port=6595)

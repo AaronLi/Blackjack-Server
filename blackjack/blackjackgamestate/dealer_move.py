@@ -2,6 +2,7 @@ import typing
 import db.game
 from blackjack.blackjackgamestate import dispatcher
 from blackjack.blackjackgamestate import gamestate, state
+from blackjack.hand_state import HandState
 
 
 class DealerMove(gamestate.GameState):
@@ -34,6 +35,12 @@ class DealerMove(gamestate.GameState):
                     game.change_state(state.State.PAYOUT)
                 elif all(score > 21 for score in game.get_hand_scores(-1)):
                     # dealer busted
+                    game.change_state(state.State.PAYOUT)
+                elif game.player_natural or game.dealer_natural:
+                    # direct to dealer move through natural
+                    game.change_state(state.State.PAYOUT)
+                elif all(all(score > 21 for score in game.get_hand_scores(i)) for i in range(len(game.player_hands)) if game.player_hands[i].hand_state & HandState.ACTIVE):
+                    # all player hands are busted
                     game.change_state(state.State.PAYOUT)
                 else:
                     game.dealer_hand.cards.append(game.deck.draw_card())

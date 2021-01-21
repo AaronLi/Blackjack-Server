@@ -3,6 +3,6 @@ import enum
 
 class HandState(enum.IntFlag):
     INACTIVE = 0
-    STANDING = enum.auto()
-    ACTIVE = enum.auto()
-    DOUBLING = enum.auto()
+    STANDING = 1
+    ACTIVE = 2
+    DOUBLING = 4

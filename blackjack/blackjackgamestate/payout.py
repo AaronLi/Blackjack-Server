@@ -16,7 +16,7 @@ class Payout(gamestate.GameState):
     def enter(game: "db.game.Game") -> "db.game.Game":
         # TODO: pay balance to player
         payout = Payout.get_player_payout(game)[1]
-        logging.info(f"Player {'x'} won {payout}₪")
+        logging.info(f"Player {game.player.username} won {payout}₪")
         game.player.balance += payout
         game.player.save()
         return super(Payout, Payout).enter(game)

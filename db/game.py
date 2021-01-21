@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from pymodm import MongoModel, fields
+from pymodm import fields, EmbeddedMongoModel, MongoModel
 
 import blackjack
 from blackjack import hand_state, blackjackcard

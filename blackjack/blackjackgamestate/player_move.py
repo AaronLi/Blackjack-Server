@@ -76,6 +76,10 @@ class PlayerMove(gamestate.GameState):
         options = {}
 
         for i, player_hand in enumerate(game.player_hands):
+            if not (player_hand.hand_state & hand_state.HandState.ACTIVE):
+                # not active
+                continue
+
             if player_hand.hand_state == hand_state.HandState.INACTIVE:
                 # inactive
                 continue

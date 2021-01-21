@@ -18,7 +18,10 @@ class User(MongoModel):
     auth_token = fields.CharField()
     auth_token_expiry = fields.DateTimeField()
     last_logon = fields.DateTimeField(default=datetime.now())
-    current_game = fields.ReferenceField(Game, on_delete=fields.ReferenceField.NULLIFY, verbose_name="Current Game", blank=True)
+    current_game = fields.ReferenceField(Game, verbose_name="Current Game", blank=True)
+
+    class Meta:
+        cascade=True
 
     def __repr__(self) -> str:
         return f"<User(username={self.username}, balance={self.balance}, totp_base={self.totp_base}, current_game={self.current_game})>"
